@@ -10,7 +10,8 @@
 ## 硬件连接
 - **SPI接口**：配一个MISO 一个CLK
   - SCK/MISO 连接到对应SPI引脚
-  - SPI在CUBEMX中配置 **MSB 16bits** 格式，速率 <20MHz（无需DMA或中断）
+  - SPI在CUBEMX中配置 **MSB 16bits** 格式，速率 <20MHz CLOCK Polarity设置为HIGH 其他默认
+    不需要DMA或中断
 - **CONVST**： 使用TIM输出占空比
   - 连接定时器PWM输出（TIM3_CH1）用于触发采样
   - 推荐配置：10kHz频率，占空比98%
