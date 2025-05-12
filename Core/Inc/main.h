@@ -62,8 +62,6 @@ void Error_Handler(void);
 #define AD_BUSY_EXTI_IRQn EXTI3_IRQn
 #define AD_CS_Pin GPIO_PIN_7
 #define AD_CS_GPIO_Port GPIOA
-#define AD_RANGE_Pin GPIO_PIN_0
-#define AD_RANGE_GPIO_Port GPIOB
 #define AD_RESET_Pin GPIO_PIN_1
 #define AD_RESET_GPIO_Port GPIOB
 #define AD_OS0_Pin GPIO_PIN_2
@@ -72,6 +70,8 @@ void Error_Handler(void);
 #define AD_OS1_GPIO_Port GPIOE
 #define AD_OS2_Pin GPIO_PIN_8
 #define AD_OS2_GPIO_Port GPIOE
+#define AD_RANGE_Pin GPIO_PIN_9
+#define AD_RANGE_GPIO_Port GPIOE
 #define TFT_BL_Pin GPIO_PIN_12
 #define TFT_BL_GPIO_Port GPIOE
 #define TFT_CS_Pin GPIO_PIN_13

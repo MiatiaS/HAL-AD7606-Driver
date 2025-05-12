@@ -59,10 +59,10 @@ TFT_HandleTypeDef htft1 ;
 /* USER CODE BEGIN PV */
 uint16_t ad7606Buff[SAMPLING_POINTS][SAMPLING_CHANNEL] ;
 volatile uint8_t ad7606SamplingDoneFlag = 0;
-uint8_t Flag = 0;
+
 uint16_t nums = 0;
 int cnt = 0;
-int processingData = 0;
+
 // 显示字符串缓冲区
 char str1[50];
 char str2[50];
@@ -141,11 +141,19 @@ int main(void)
   // 初始化TFT显示
   TFT_Demo_Init();
   TFT_Fill_Area(&htft1, 0, 0, 320, 240, BLACK);
+
   uint8_t  adcRunTimes = 0;
   uint16_t adcValue = 0;
 
   // 初始化AD7606
   AD7606Init();
+  
+  // 设置过采样倍数，这里设置为4倍过采样(值为2)
+ // AD7606SetOverSampling(2);
+  
+  // 设置量程为±10V
+  AD7606SetRange(0);
+  
   AD7606Start();
   /* USER CODE END 2 */
 
@@ -156,22 +164,37 @@ int main(void)
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
-    //sprintf(str1,"DoneFlag %d , nums %d",ad7606SamplingDoneFlag,nums);
-    //TFT_Show_String(&htft1, 10, 10, (uint8_t*)str1, WHITE, BLACK, 16, 0);
-
     if( ad7606SamplingDoneFlag )
     {
+      float temp = 0;
+      uint32_t rawSum = 0; // 用于累加原始数字量
       AD7606Stop();
-      processingData = 1;
-      sprintf(str1,"DoneFlag %d , nums %d  ",ad7606SamplingDoneFlag,cnt);
-      TFT_Show_String(&htft1, 10, 10, (uint8_t*)str1, WHITE, BLACK, 16, 0);
 
+      
+      // 显示当前采样状态和量程信息
+      sprintf(str1,"Done %d , nums %d     ",
+              ad7606SamplingDoneFlag, cnt );
+      TFT_Show_String(&htft1, 10, 10, str1, WHITE, BLACK, 16, 0);
 
-        sprintf(str2,"%f\r\n",AD7606ConvValue(ad7606Buff[30][2]));
-        TFT_Show_String(&htft1, 10, 30, (uint8_t*)str2, WHITE, BLACK,16, 0);
+      // 计算平均电压和原始数字量
+      for (int i = 0 ; i < SAMPLING_POINTS ; i++)
+      {
+        temp = temp + AD7606ConvValue(ad7606Buff[i][0]);
+        rawSum += ad7606Buff[i][0]; // 累加原始数字量
+      }
+      
+      temp = temp / SAMPLING_POINTS; // 计算平均电压值
+      uint32_t avgRaw = (rawSum / SAMPLING_POINTS); // 计算平均数字量
+      
+      // 显示电压值
+      sprintf(str2,"Voltage: %.4f V", temp);
+      TFT_Show_String(&htft1, 10, 30, (uint8_t*)str2, WHITE, BLACK, 16, 0);
+      
+      // 显示原始数字量
+      sprintf(str3,"Raw: %u (0x%04X)", avgRaw, avgRaw);
+      TFT_Show_String(&htft1, 10, 50, (uint8_t*)str3, WHITE, BLACK, 16, 0);
 
       nums = 0;
-      processingData = 0;
       AD7606Start();
     }
   }
@@ -243,8 +266,7 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
   if(GPIO_Pin == AD_BUSY_Pin)
     {
     //read AD7606
-    if (!processingData)
-    {
+
       if(nums < SAMPLING_POINTS){
         AD7606BusyIrqCallback(ad7606Buff[nums],SAMPLING_CHANNEL);
         nums++;
@@ -255,7 +277,7 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
         ad7606SamplingDoneFlag = 1;
         cnt ++ ;
       }
-    }
+
   }
 }
 /* USER CODE END 4 */

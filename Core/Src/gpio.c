@@ -53,11 +53,11 @@ void MX_GPIO_Init(void)
   HAL_GPIO_WritePin(AD_CS_GPIO_Port, AD_CS_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(GPIOB, AD_RANGE_Pin|AD_RESET_Pin|AD_OS0_Pin, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(GPIOB, AD_RESET_Pin|AD_OS0_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(GPIOE, AD_OS1_Pin|AD_OS2_Pin|TFT_BL_Pin|TFT_CS_Pin
-                          |TFT_DC_Pin|TFT_RES_Pin, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(GPIOE, AD_OS1_Pin|AD_OS2_Pin|AD_RANGE_Pin|TFT_BL_Pin
+                          |TFT_CS_Pin|TFT_DC_Pin|TFT_RES_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pin : AD_BUSY_Pin */
   GPIO_InitStruct.Pin = AD_BUSY_Pin;
@@ -72,13 +72,6 @@ void MX_GPIO_Init(void)
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
   HAL_GPIO_Init(AD_CS_GPIO_Port, &GPIO_InitStruct);
 
-  /*Configure GPIO pin : AD_RANGE_Pin */
-  GPIO_InitStruct.Pin = AD_RANGE_Pin;
-  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
-  GPIO_InitStruct.Pull = GPIO_NOPULL;
-  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
-  HAL_GPIO_Init(AD_RANGE_GPIO_Port, &GPIO_InitStruct);
-
   /*Configure GPIO pin : AD_RESET_Pin */
   GPIO_InitStruct.Pin = AD_RESET_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
@@ -89,16 +82,23 @@ void MX_GPIO_Init(void)
   /*Configure GPIO pin : AD_OS0_Pin */
   GPIO_InitStruct.Pin = AD_OS0_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
-  GPIO_InitStruct.Pull = GPIO_NOPULL;
-  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_HIGH;
+  GPIO_InitStruct.Pull = GPIO_PULLDOWN;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(AD_OS0_GPIO_Port, &GPIO_InitStruct);
 
   /*Configure GPIO pins : AD_OS1_Pin AD_OS2_Pin */
   GPIO_InitStruct.Pin = AD_OS1_Pin|AD_OS2_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
-  GPIO_InitStruct.Pull = GPIO_NOPULL;
-  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
+  GPIO_InitStruct.Pull = GPIO_PULLDOWN;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(GPIOE, &GPIO_InitStruct);
+
+  /*Configure GPIO pin : AD_RANGE_Pin */
+  GPIO_InitStruct.Pin = AD_RANGE_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+  GPIO_InitStruct.Pull = GPIO_PULLUP;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+  HAL_GPIO_Init(AD_RANGE_GPIO_Port, &GPIO_InitStruct);
 
   /*Configure GPIO pins : TFT_BL_Pin TFT_CS_Pin TFT_DC_Pin TFT_RES_Pin */
   GPIO_InitStruct.Pin = TFT_BL_Pin|TFT_CS_Pin|TFT_DC_Pin|TFT_RES_Pin;

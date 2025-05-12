@@ -60,5 +60,7 @@ void AD7606Stop(void);
 void AD7606BusyIrqCallback(uint16_t *ad7606Val,uint8_t ad7606Chl);
 void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin);
 float AD7606ConvValue(uint16_t bin);
-void AD7606SetOverSampling(uint8_t overSample);  // 新增函数声明
 
+void AD7606SetOverSampling(uint8_t overSample);
+void AD7606SetRange(uint8_t range);
+uint8_t AD7606GetRange(void);  // 新增函数声明，用于获取当前量程设置
