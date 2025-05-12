@@ -1,55 +1,84 @@
-/**
- * @brief AD7606使用说明
- *
- * 硬件连接:
- * - SPI接口: SCK, MISO连接到对应的SPI引脚 MSB 16BITS 速率在20M以下都能跑 无需使用DMA 或者 IT
- * - CONVST: 连接到定时器PWM输出(TIM3_CH1)用于触发采样 这里使用10K 占空比为98
- * - RESET: 连接到GPIO用于复位芯片
- * - BUSY: 连接到外部中断引脚(PC3)用于通知数据转换完成
- * - CS: 连接到GPIO用于选择SPI设备
- * - OS0/OS1/OS2: 连接到GPIO用于设置过采样率        (注意，康威需要5V驱动)
- * - RANGE: 连接到GPIO用于设置输入电压范围(±5V或±10V)(注意，康威需要5V驱动)
- *
- * 软件配置:
- * 1. 在main.c函数中定义:
- *    #define SAMPLING_POINTS  1024   // 每个采样批次的采样点数
- *    #define SAMPLING_CHANNEL 8      // AD7606的通道数量
- *
- *    uint16_t ad7606Buff[SAMPLING_POINTS][SAMPLING_CHANNEL]; // 存储采样数据的缓冲区
- *    volatile uint8_t ad7606SamplingDoneFlag = 0;          // 采样完成标志
- *
- * 2. 使用流程:
- *    a) 调用AD7606Init()初始化
- *    b) 调用AD7606SetOverSampling()设置过采样率(可选)
- *    c) 调用AD7606SetRange()设置输入电压范围(可选)
- *    d) 调用AD7606Start()开始采样
- *    e) 等待ad7606SamplingDoneFlag置1表示采样完成
- *    f) 处理ad7606Buff中的数据
- *    g) 处理完后调用AD7606Start()开始新一轮采样
-*   在回调地方放置
-*void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
-{
-  if(GPIO_Pin == AD_BUSY_Pin)
-    {
-      if(nums < SAMPLING_POINTS){
-        AD7606BusyIrqCallback(ad7606Buff[nums],SAMPLING_CHANNEL);
-        nums++;
-          ad7606SamplingDoneFlag = 0;
-      }
-      else
-        ad7606SamplingDoneFlag = 1;
+
+# AD7606 使用说明
+
+
+
+## 使用说明 添加 .c .h 按照ad7606.h配置引脚 在main.c配置宏定义跟中断函数
+
+
+## 硬件连接
+- **SPI接口**：配一个MISO 一个CLK
+  - SCK/MISO 连接到对应SPI引脚
+  - SPI在CUBEMX中配置 **MSB 16bits** 格式，速率 <20MHz（无需DMA或中断）
+- **CONVST**： 使用TIM输出占空比
+  - 连接定时器PWM输出（TIM3_CH1）用于触发采样
+  - 推荐配置：10kHz频率，占空比98%
+- **RESET**：GPIO输出  用于芯片复位
+- **CS**：   GPIO输出  用于SPI设备选择
+- **BUSY**： 连接外部中断引脚，下降沿触发转换完成中断
+
+- **下面这四个引脚无所谓**
+- 康威科技需要5V驱动
+- **OS0/OS1/OS2**：连接GPIO设置过采样率（需5V电平驱动）
+- **RANGE**：连接GPIO设置输入范围（±5V/±10V，需5V电平驱动）
+
+---
+
+## 软件配置
+
+### 宏定义（在main.c中配置）
+```c
+#define SAMPLING_POINTS   1024    // 每批次采样点数
+#define SAMPLING_CHANNEL   8      // AD7606通道数
+
+uint16_t ad7606Buff[SAMPLING_POINTS][SAMPLING_CHANNEL];  // 采样缓冲区
+volatile uint8_t ad7606SamplingDoneFlag = 0;             // 采样完成标志
+```
+
+---
+
+## 使用流程
+1. **初始化**：调用 `AD7606Init()`
+2. **可选配置**：
+   - 调用 `AD7606SetOverSampling()` 设置过采样率
+   - 调用 `AD7606SetRange()` 设置输入量程
+3. **启动采样**：调用 `AD7606Start()`
+4. **等待完成**：循环检测 `ad7606SamplingDoneFlag` 标志
+5. **数据处理**：处理 `ad7606Buff` 中的数据
+6. **重启采样**：完成处理后再次调用 `AD7606Start()`
+
+---
+
+## 中断处理 放在main.c的回调当中
+```c
+void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin) {
+  if (GPIO_Pin == AD_BUSY_Pin) {
+    if (nums < SAMPLING_POINTS) {
+      AD7606BusyIrqCallback(ad7606Buff[nums], SAMPLING_CHANNEL);
+      nums++;
+      ad7606SamplingDoneFlag = 0;
+    } else {
+      ad7606SamplingDoneFlag = 1;
+    }
   }
 }
- * 3. 中断处理:
- *    - BUSY引脚下降沿触发中断
- *    - 中断服务程序自动读取所有通道数据
- *    - 达到SAMPLING_POINTS后设置ad7606SamplingDoneFlag标志
- *
- * 电压范围:
- * - ±5V量程: 分辨率为5V/32768 ≈ 0.153mV
- * - ±10V量程: 分辨率为10V/32768 ≈ 0.305mV
- *
- * 注意事项:
- * - AD7606需要5V电源供电，STM32的3.3V可能无法正常驱动
- * - 输入信号电压不能超过选定的量程范围
- */
+```
+
+---
+
+## 电压量程
+| 量程范围 | 分辨率      | 数字量范围 |
+|----------|-------------|------------|
+| ±5V      | ≈0.153mV   | -32768~32767 |
+| ±10V     | ≈0.305mV   | -32768~32767 |
+
+
+## 注意事项
+⚠️ **硬件相关**：
+- AD7606 需 **5V电源供电**（STM32的3.3V可能无法驱动）
+- 输入信号严禁超出所选量程
+
+⚠️ **软件相关**：
+- 确保BUSY中断优先级高于SPI操作
+- 采样缓冲区需按 `[SAMPLING_POINTS][SAMPLING_CHANNEL]` 二维数组访问
+- 转换完成标志应使用 `volatile` 修饰防止编译器优化
